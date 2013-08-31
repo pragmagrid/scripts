@@ -1,0 +1,10 @@
+Scripts to deal with pragma/prime www files and wordpress.
+
+backup-www        - backup of www.pragma-grid.net (wordpress db and flat files)
+backup-goc        - backup of GOC wiki 
+
+renameLinks       - update PRIME links after moving wordpress to another host
+pragma-svn        - update pragma  website form SVN repo (likely obsolete)
+
+
+

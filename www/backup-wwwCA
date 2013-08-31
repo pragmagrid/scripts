@@ -1,0 +1,23 @@
+#!/bin/bash
+
+########################################
+# Backup www CA directories 
+# Run on pragma CA (www)
+########################################
+
+BDIR=/state/partition1/root/backup
+SRC="/var/www/html/ca /var/www/html/exp-ca/"
+DATE=`date "+%Y%m%d"`
+FILE=goc-$DATE.tar.gz
+
+# create a backup
+cd $BDIR
+tar czvf $FILE /var/www/html/ca /var/www/html/exp-ca/
+
+# remove  backup older than 4 months
+old=`find . -name 'goc*.tar.gz' -mtime +120 -print`
+for i in $old;
+do
+    rm -rf $i
+done
+

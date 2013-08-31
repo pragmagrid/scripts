@@ -1,0 +1,34 @@
+#!/bin/bash
+
+###########################
+# backup PRAGMA GOC wiki
+# run on pragma goc host
+###########################
+
+DATE=`date "+%Y%m%d"`
+BACKDIR=/root/wp/backup/
+DB="wikidb"
+. .words
+
+# backup mysql DB
+backup_wiki () {
+    FILE=$BACKDIR/$DB-$DATE.sql.gz
+    mysqldump -u $USER -p$PASS $DB | gzip > $FILE
+}
+
+# delete old files
+clean_files () {
+    cd $BACKDIR
+    files=`find . -type f -name "$DB*.gz" -mtime +60 -print`
+    for i in $files
+    do
+        rm -rf $i
+    done
+}
+
+backup_wiki
+clean_files
+
+#To execute on the other servers, without uncompressing, use the following command:
+#zcat backup.sql.gz | mysql --user=abc --password=def
+

@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+use Getopt::Long;
+my %repos = ();
+$result = GetOptions(\%repos, "pragma!", "help!");
+
+if( $repos{'help'}) {
+  print "Update the pragma website from SVN repository.\n";
+  print "usage: update [--help]\n";
+  exit;
+}
+
+  $key = 'pragma';
+    # Check for files to add to the repository
+    $result = `svn status -u /var/www/html/$key | grep '^\?' | sed 's/^\? *//'`;
+    if(length($result) != 0) {
+      chomp($result);
+      print "Adding file(s) to versioning system:\n";
+      print "$result\n";
+      $result = `echo "$result" | xargs svn add`;
+      chomp($result);
+      print "$result\n";
+    }
+    # Do an update before the commit if necessary
+    $result = `svn status -u /var/www/html/$key | grep -v '^Status'`;
+    if(length($result) != 0) {
+      print "preparatory udpate\n";
+      $result = `svn update /var/www/html/$key`;
+      chomp($result);
+      print "$result\n";
+    }
+    # Check if a commit needs to be made
+    $result = `svn status /var/www/html/$key`;
+    if(length($result) != 0) {
+      print "Committing files to repository\n";
+      $date = gmtime();
+      $result = `svn commit /var/www/html/$key -m "$date"`;
+      print "$result\n";
+    }
+  $result=`svn update /var/www/html/$key`;
+  chomp($result);
+  print "$key: $result\n";
+

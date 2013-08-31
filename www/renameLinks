@@ -1,0 +1,22 @@
+#!/bin/bash
+
+######################################
+# rename links in prime wordpress files 
+# after moving to another host
+######################################
+
+LIST=/tmp/listing
+cd /var/www/html/prime
+grep -r -l "rocksvm2.ucsd.edu" . | grep -v svn | grep -v "\.doc" | grep -v "\.pdf" | grep -v "\.ppt" > $LIST
+
+files=`cat $LIST`
+
+new="rocce-vm1.ucsd.edu"
+old="rocksvm2.ucsd.edu"
+
+for i in $files ; 
+do 
+    echo $i
+    sed -i "s/$old/$new/g" $i
+done
+
