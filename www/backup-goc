@@ -1,24 +1,29 @@
 #!/bin/bash
 
-###########################
-# backup PRAGMA GOC wiki
-# run on pragma goc host
-###########################
+#########################################
+# backup PRAGMA GOC :  www + wiki + certs
+# run on PRAGMA GOC host
+#########################################
 
 DATE=`date "+%Y%m%d"`
-BACKDIR=/root/wp/backup/
+LBACKDIR=/root/wp/backup/
 DB="wikidb"
+FILE=$LBACKDIR/$DB-$DATE.sql.gz
+PART=/share/backup/rocks-210
+BACKUPDIR=$PART/$DATE
 . .words
 
-# backup mysql DB
+## backup mysql DB
 backup_wiki () {
-    FILE=$BACKDIR/$DB-$DATE.sql.gz
     mysqldump -u $USER -p$PASS $DB | gzip > $FILE
+    clean_files
+    #To upload on the other servers, without uncompressing, use:
+    #zcat backup.sql.gz | mysql --user=abc --password=def
 }
 
-# delete old files
+## delete old files
 clean_files () {
-    cd $BACKDIR
+    cd $LBACKDIR
     files=`find . -type f -name "$DB*.gz" -mtime +60 -print`
     for i in $files
     do
@@ -26,9 +31,39 @@ clean_files () {
     done
 }
 
+## backup directyories in www
+backup_www () {
+    ls $PART > /dev/null 2>&1
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+        echo "Can not access $PART"
+        return $RETVAL       
+    fi
+ 
+    mkdir -p $BACKUPDIR/www
+    LOG=$BACKUPDIR/log
+    date > $LOG
+
+    list="applications doc gin homepage index.html inca-reporters mediawiki-1.18.1 pragma-doc secure wordpress"
+    for i in $list; do
+        rsync -az /var/www/html/$i $BACKUPDIR/www >> $LOG 2>&1
+    done
+    rsync -az /state/partition1/softdepot $BACKUPDIR/www >> $LOG 2>&1
+
+    if [ -f $FILE ] ; then
+        cp $FILE $BACKUPDIR
+    fi
+
+}
+
+backup_certs () {
+     /bin/tar chzf /root/certs.tar.gz /etc/grid-security
+     cp -p /root/certs.tar.gz $BACKUPDIR
+}
+
+
+
+## main
 backup_wiki
-clean_files
-
-#To execute on the other servers, without uncompressing, use the following command:
-#zcat backup.sql.gz | mysql --user=abc --password=def
-
+backup_www
+backup_certs

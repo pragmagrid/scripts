@@ -1,10 +1,9 @@
 #!/bin/bash
 
 ###############################################
-# Back pragma wordpress flat files and DB
+# Back pragma wordpress  flat files and DB
 # Copy backup files to NAS 
 # Requires: user/pass for db access
-#           backup hostname (and disk space)
 ###############################################
 
 DATE=`date "+%Y%m%d"`
@@ -12,13 +11,13 @@ BACKDIR=/state/partition1/backup/
 DB="pragma"
 . .words
 
-## backup pragma wordpress db
+## backup pragma wordpress
 backup_pragma () {
     FILE=$BACKDIR/$DB-$DATE.sql.gz
     echo "mysqldump of $DB ..."
     mysqldump -u $USER -p$PASS $DB | gzip > $FILE
     scp $FILE $BACKUPHOST:/state/primary/data/root/backup/rocce-vm1
-    scp  /root/utils/backup-pragma-db.sh $BACKUPHOST:/state/primary/data/root/backup/rocce-vm1
+    clean_files
 }
 
 clean_files () {
@@ -39,9 +38,12 @@ backup_pragma_wordpress () {
     echo "backup of pragma wordpress ..."
 }
 
+copy_scripts () {
+    scp /root/utils/backup-www $BACKUPHOST:/state/primary/data/root/backup/rocce-vm1/
+    scp /etc/httpd/conf.d/pragma.conf $BACKUPHOST:/state/primary/data/root/backup/rocce-vm1/
+}
+
 ## main
 backup_pragma
 backup_pragma_wordpress
-clean_files
-scp /root/utils/backup-pragma-db.sh $BACKUPHOST:/state/primary/data/root/backup/rocce-vm1/backup-pragma-db-$DATE.sh
-
+copy_scripts
